@@ -35,10 +35,10 @@ def summarize_youtube_video():
         video_id = youtube_url.split("v=")[-1]
         transcript = YouTubeTranscriptApi.get_transcript(video_id)
         full_text = " ".join([entry['text'] for entry in transcript])
+        
     except Exception as e:
-        # Log and return the specific error message
         print(f"Transcript retrieval error: {e}")
-        return jsonify({"error": "Could not retrieve transcript"}), 400
+        return jsonify({"error": "This video does not have a transcript available."}), 400
 
     # Proceed with summarizing the transcript if retrieval is successful
     try:
@@ -49,5 +49,19 @@ def summarize_youtube_video():
         print(f"Summarization error: {e}")
         return jsonify({"error": "Could not summarize transcript"}), 500
 
+@app.route('/test_youtube', methods=['GET'])
+def test_youtube():
+    try:
+        response = requests.get("https://www.youtube.com/")
+        if response.status_code == 200:
+            return "YouTube is accessible from this server."
+        else:
+            return f"Failed to access YouTube: Status Code {response.status_code}"
+    except Exception as e:
+        return f"Error accessing YouTube: {e}"
+    
 if __name__ == '__main__':
     app.run(debug=True)
+
+
+    
