@@ -5,7 +5,7 @@ import requests
 app = Flask(__name__)
 
 API_URL = "https://api-inference.huggingface.co/models/facebook/bart-large-cnn"
-headers = {"Authorization": "Bearer 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"}  # Add your API key here
+headers = {"Authorization": "Bearer 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"}  # Replace with your key
 
 def summarize_text(text):
     response = requests.post(API_URL, headers=headers, json={"inputs": text})
@@ -21,7 +21,7 @@ def split_text(text, max_words=500, overlap=50):
 
 @app.route('/')
 def index():
-    return render_template('YouTube_Summarizer.html')
+    return render_template('index.html')
 
 @app.route('/summarize', methods=['POST'])
 def summarize_youtube_video():
@@ -33,8 +33,10 @@ def summarize_youtube_video():
         transcript = YouTubeTranscriptApi.get_transcript(video_id)
         full_text = " ".join([entry['text'] for entry in transcript])
     except Exception as e:
+        # Handle error if transcript retrieval fails
         return jsonify({"error": "Could not retrieve transcript"}), 400
 
+    # Summarize the transcript if available
     chunk_summaries = [summarize_text(chunk) for chunk in split_text(full_text, max_words=500, overlap=50)]
     combined_summary = " ".join(filter(None, chunk_summaries))
     return jsonify({"summary": combined_summary})
