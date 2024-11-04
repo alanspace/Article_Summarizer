@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Video Summarizer</title>
+    <style>
+        /* Reset and basic styling */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            background: #f4f7f6;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 90%;
+            max-width: 600px;
+            background: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+        }
+        h1 {
+            color: #004d61;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+        }
+        p {
+            font-size: 1em;
+            margin-bottom: 20px;
+            color: #555;
+        }
+        .input-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .input-group input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .input-group button {
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            color: white;
+            background-color: #004d61;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .input-group button:hover {
+            background-color: #00768b;
+        }
+        .summary {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 4px;
+            text-align: left;
+            color: #333;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>YouTube Video Summarizer</h1>
+        <p>Paste a YouTube video link below to get a summarized transcript of the video content.</p>
+        
+        <div class="input-group">
+            <input type="text" id="youtube-url" placeholder="Enter YouTube Video URL">
+            <button onclick="getSummary()">Summarize</button>
+        </div>
+
+        <div id="summary-result" class="summary"></div>
+    </div>
+
+    <script>
+        async function getSummary() {
+            const url = document.getElementById('youtube-url').value;
+            const resultDiv = document.getElementById('summary-result');
+            resultDiv.textContent = 'Summarizing...';
+
+            try {
+                const response = await fetch('/summarize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+                const data = await response.json();
+
+                if (data.summary) {
+                    resultDiv.textContent = data.summary;
+                } else {
+                    resultDiv.textContent = 'Error: ' + (data.error || 'Unable to summarize video.');
+                }
+            } catch (error) {
+                resultDiv.textContent = 'An error occurred. Please try again later.';
+            }
+        }
+    </script>
+</body>
+</html>
