@@ -21,7 +21,7 @@ def split_text(text, max_words=500, overlap=50):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('YouTube_Summarizer.html')
 
 @app.route('/summarize', methods=['POST'])
 def summarize_youtube_video():
