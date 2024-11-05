@@ -4,8 +4,13 @@ import requests
 
 app = Flask(__name__)
 
+# API_URL = "https://api-inference.huggingface.co/models/facebook/bart-large-cnn"
+# headers = {"Authorization": ""}  # Replace with your key
+
+import os
+
 API_URL = "https://api-inference.huggingface.co/models/facebook/bart-large-cnn"
-headers = {"Authorization": "Bearer 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"}  # Replace with your key
+headers = {"Authorization": f"Bearer {os.getenv('HUGGING_FACE_API_KEY')}"}
 
 def summarize_text(text):
     response = requests.post(API_URL, headers=headers, json={"inputs": text})
