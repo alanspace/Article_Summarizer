@@ -74,13 +74,15 @@ def summarize_youtube_video():
 
 def extract_video_id(youtube_url):
     if "youtu.be" in youtube_url:
-        return youtube_url.split('/')[-1]
+        video_id = youtube_url.split('/')[-1].split('?')[0]  # Removes any query params
     elif "youtube.com/watch?v=" in youtube_url:
-        return youtube_url.split("v=")[-1].split('&')[0]
+        video_id = youtube_url.split("v=")[-1].split('&')[0]  # Removes any additional params
     elif "youtube.com/embed/" in youtube_url:
-        return youtube_url.split('/embed/')[-1].split('?')[0]
+        video_id = youtube_url.split('/embed/')[-1].split('?')[0]
     else:
-        return None
+        video_id = None  # Handles cases with invalid URLs or no recognizable format
+    print("Extracted Video ID:", video_id)
+    return video_id
     
 # Route to test YouTube access
 @app.route('/test_youtube', methods=['GET'])
