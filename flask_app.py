@@ -4,15 +4,14 @@ import requests
 import os
 from dotenv import load_dotenv
 import time
-from youtube_transcript_api import YouTubeTranscriptApi, TranscriptNotFound
 
 load_dotenv('APIkey.env')
 
 app = Flask(__name__)
+
 # Print environment variables
 print("Hugging Face API Key:", os.getenv('HUGGING_FACE_API_KEY'))
 print("YouTube API Key:", os.getenv('YOUTUBE_API_KEY'))
-
 
 # Hugging Face API settings
 API_URL = "https://api-inference.huggingface.co/models/facebook/bart-large-cnn"
@@ -26,10 +25,7 @@ def fetch_transcript_with_backoff(video_id, retries=3):
     for attempt in range(retries):
         try:
             return YouTubeTranscriptApi.get_transcript(video_id)
-        except TranscriptNotFound:
-            print("Transcript not found for this video.")
-            return None
-        except Exception as e:
+        except Exception as e:  # Catch any exception if TranscriptNotFound is not explicitly accessible
             print(f"Attempt {attempt + 1} failed with error: {e}")
             time.sleep(delay)
             delay *= 2  # Exponential backoff
