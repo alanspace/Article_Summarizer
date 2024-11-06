@@ -26,21 +26,22 @@ def fetch_captions_from_youtube_data_api(video_id):
     response = requests.get(url)
     data = response.json()
 
+    # Check if captions are available
     if 'items' in data and data['items']:
         return "Captions available but could not be retrieved in detail due to restrictions."
     else:
         return None
 
 # Function to fetch transcript with exponential backoff
-def fetch_transcript_with_backoff(video_id, retries=3):
-    delay = 2
+def fetch_transcript_with_backoff(video_id, retries=5):
+    delay = 5  # Start with a longer delay
     for attempt in range(retries):
         try:
             return YouTubeTranscriptApi.get_transcript(video_id)
         except Exception as e:
             print(f"Attempt {attempt + 1} failed with error: {e}")
             time.sleep(delay)
-            delay *= 2
+            delay *= 2  # Increase delay exponentially
     return None
 
 @app.route('/video_info', methods=['POST'])
@@ -83,7 +84,7 @@ def get_video_info():
     except Exception as e:
         print(f"Failed to retrieve video information: {e}")
         return jsonify({"error": f"Failed to retrieve video information: {e}"}), 500
-        
+
 # Summarize text
 def summarize_text(text):
     response = requests.post(API_URL, headers=headers, json={"inputs": text})
