@@ -2,7 +2,6 @@ from flask import Flask, request, jsonify, render_template
 from youtube_transcript_api import YouTubeTranscriptApi
 import requests
 import os
-from youtube_transcript_api._errors import TranscriptNotFound, NoTranscriptAvailable
 
 app = Flask(__name__)
 
@@ -45,18 +44,17 @@ def summarize_youtube_video():
         video_id = youtube_url.split("v=")[-1]
         transcript = YouTubeTranscriptApi.get_transcript(video_id)
         full_text = " ".join([entry['text'] for entry in transcript])
-    except TranscriptNotFound:
-        return jsonify({"error": "Transcript not available due to YouTube restrictions."}), 400
-    except NoTranscriptAvailable:
-        return jsonify({"error": "No captions available for this video."}), 400
     except Exception as e:
-        return jsonify({"error": "An error occurred retrieving the transcript."}), 500
+        # Catching any exception from YouTubeTranscriptApi (handles all transcript-related errors)
+        print(f"Transcript retrieval error: {e}")
+        return jsonify({"error": "Transcript not available or restricted due to YouTube's settings."}), 400
 
     try:
         chunk_summaries = [summarize_text(chunk) for chunk in split_text(full_text, max_words=500, overlap=50)]
         combined_summary = " ".join(filter(None, chunk_summaries))
         return jsonify({"summary": combined_summary})
     except Exception as e:
+        print(f"Summarization error: {e}")
         return jsonify({"error": "Could not summarize transcript"}), 500
 
 # Route to test YouTube access
