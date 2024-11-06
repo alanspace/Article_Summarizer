@@ -52,6 +52,10 @@ def summarize_text(text):
         print("Error:", response.status_code, response.text)
         return None
 
+@app.route('/')
+def index():
+    return render_template('YouTube_Summarizer.html')
+    
 # Route to summarize YouTube video transcript
 @app.route('/summarize', methods=['POST'])
 def summarize_youtube_video():
