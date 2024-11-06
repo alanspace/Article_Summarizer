@@ -43,6 +43,47 @@ def fetch_transcript_with_backoff(video_id, retries=3):
             delay *= 2
     return None
 
+@app.route('/video_info', methods=['POST'])
+def get_video_info():
+    data = request.get_json()
+    youtube_url = data.get('url')
+
+    if not youtube_url:
+        return jsonify({"error": "No YouTube URL provided"}), 400
+
+    video_id = extract_video_id(youtube_url)
+    print("Extracted Video ID:", video_id)
+
+    if not video_id:
+        return jsonify({"error": "Invalid YouTube URL format"}), 400
+
+    url = f"https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id={video_id}&key={YOUTUBE_API_KEY}"
+
+    try:
+        response = requests.get(url)
+        data = response.json()
+
+        if 'items' not in data or not data['items']:
+            return jsonify({"error": "Video not found or unable to retrieve metadata"}), 404
+
+        title = data['items'][0]['snippet']['title']
+        author = data['items'][0]['snippet']['channelTitle']
+        duration = data['items'][0]['contentDetails']['duration']
+        
+        # Construct the thumbnail URL using the video ID
+        thumbnail_url = f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
+
+        return jsonify({
+            "title": title,
+            "author": author,
+            "duration": duration,
+            "thumbnail_url": thumbnail_url,
+            "youtube_link": f"https://www.youtube.com/watch?v={video_id}"
+        })
+    except Exception as e:
+        print(f"Failed to retrieve video information: {e}")
+        return jsonify({"error": f"Failed to retrieve video information: {e}"}), 500
+        
 # Summarize text
 def summarize_text(text):
     response = requests.post(API_URL, headers=headers, json={"inputs": text})
@@ -55,7 +96,7 @@ def summarize_text(text):
 @app.route('/')
 def index():
     return render_template('YouTube_Summarizer.html')
-    
+
 # Route to summarize YouTube video transcript
 @app.route('/summarize', methods=['POST'])
 def summarize_youtube_video():

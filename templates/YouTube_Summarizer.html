@@ -118,10 +118,6 @@
     const url = document.getElementById('youtube-url').value;
 
     try {
-        // Show loading state
-        document.getElementById('loading-text').style.display = 'block';
-        document.getElementById('summary-result').textContent = '';
-
         // Fetch video details
         const detailsResponse = await fetch('/video_info', {
             method: 'POST',
@@ -133,19 +129,17 @@
         if (detailsData.error) {
             document.getElementById('summary-result').textContent = 'Error: ' + detailsData.error;
         } else {
-            // Update details if available
+            // Populate details
             document.getElementById('video-title').textContent = detailsData.title;
             document.getElementById('video-author').textContent = detailsData.author;
             document.getElementById('video-duration').textContent = detailsData.duration;
-
-            document.getElementById('video-link').href = `https://www.youtube.com/watch?v=${detailsData.video_id}`;
+            
+            // Set the video link and thumbnail
+            document.getElementById('video-link').href = detailsData.youtube_link;
             document.getElementById('video-thumbnail').src = detailsData.thumbnail_url;
         }
 
-        // Delay to avoid rate-limiting
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        // Fetch video summary
+        // Fetch video summary (similar to your existing function)
         const summaryResponse = await fetch('/summarize', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -160,9 +154,6 @@
         }
     } catch (error) {
         document.getElementById('summary-result').textContent = 'An error occurred. Please try again later.';
-    } finally {
-        // Hide loading text after complete
-        document.getElementById('loading-text').style.display = 'none';
     }
 }
     </script>
