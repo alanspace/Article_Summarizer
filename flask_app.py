@@ -20,21 +20,19 @@ headers = {"Authorization": f"Bearer {os.getenv('HUGGING_FACE_API_KEY')}"}
 # YouTube Data API Key
 YOUTUBE_API_KEY = os.getenv('YOUTUBE_API_KEY')
 
-# Fallback function to use YouTube Data API for captions
-def fetch_captions_from_youtube_data_api(video_id):
+# Function to get captions using YouTube Data API
+def get_captions_from_youtube_data_api(video_id):
     url = f"https://www.googleapis.com/youtube/v3/captions?part=snippet&videoId={video_id}&key={YOUTUBE_API_KEY}"
     response = requests.get(url)
     data = response.json()
 
-    # Check if captions are available
     if 'items' in data and data['items']:
-        return "Captions available but could not be retrieved in detail due to restrictions."
+        return "Captions are available but may be restricted."
     else:
         return None
 
-# Function to fetch transcript with exponential backoff
 def fetch_transcript_with_backoff(video_id, retries=5):
-    delay = 5  # Start with a longer delay
+    delay = 10  # Start with a longer initial delay
     for attempt in range(retries):
         try:
             return YouTubeTranscriptApi.get_transcript(video_id)
@@ -108,15 +106,16 @@ def summarize_youtube_video():
         return jsonify({"error": "No YouTube URL provided"}), 400
 
     video_id = extract_video_id(youtube_url)
-    transcript = fetch_transcript_with_backoff(video_id)
 
-    # If transcript retrieval fails, use YouTube Data API as a fallback
+    # Attempt to get captions first
+    captions_info = get_captions_from_youtube_data_api(video_id)
+    if captions_info:
+        return jsonify({"error": captions_info}), 400  # Captions available but restricted
+
+    # Fallback to transcript retrieval if captions are unavailable
+    transcript = fetch_transcript_with_backoff(video_id)
     if not transcript:
-        fallback_message = fetch_captions_from_youtube_data_api(video_id)
-        if fallback_message:
-            return jsonify({"error": fallback_message}), 400
-        else:
-            return jsonify({"error": "Transcript not available or restricted due to YouTube's settings."}), 400
+        return jsonify({"error": "Transcript not available or restricted due to YouTube's settings."}), 400
 
     full_text = " ".join([entry['text'] for entry in transcript])
 
