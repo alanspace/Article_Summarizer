@@ -74,6 +74,8 @@
             white-space: pre-wrap;
             color: #333;
             margin-top: 10px;
+            max-height: 300px;
+            overflow-y: auto;
         }
         .loading {
             font-size: 1em;
@@ -115,47 +117,54 @@
 
     <script>
         async function getDetailsAndSummary() {
-    const url = document.getElementById('youtube-url').value;
+            const url = document.getElementById('youtube-url').value;
 
-    try {
-        // Fetch video details
-        const detailsResponse = await fetch('/video_info', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url })
-        });
-        const detailsData = await detailsResponse.json();
+            // Show loading text while fetching
+            document.getElementById('loading-text').style.display = 'block';
+            document.getElementById('summary-result').textContent = '';
 
-        if (detailsData.error) {
-            document.getElementById('summary-result').textContent = 'Error: ' + detailsData.error;
-        } else {
-            // Populate details
-            document.getElementById('video-title').textContent = detailsData.title;
-            document.getElementById('video-author').textContent = detailsData.author;
-            document.getElementById('video-duration').textContent = detailsData.duration;
-            
-            // Set the video link and thumbnail
-            document.getElementById('video-link').href = detailsData.youtube_link;
-            document.getElementById('video-thumbnail').src = detailsData.thumbnail_url;
+            try {
+                // Fetch video details
+                const detailsResponse = await fetch('/video_info', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+                const detailsData = await detailsResponse.json();
+
+                if (detailsData.error) {
+                    document.getElementById('summary-result').textContent = 'Error: ' + detailsData.error;
+                } else {
+                    // Populate details
+                    document.getElementById('video-title').textContent = detailsData.title;
+                    document.getElementById('video-author').textContent = detailsData.author;
+                    document.getElementById('video-duration').textContent = detailsData.duration;
+                    
+                    // Set the video link and thumbnail
+                    document.getElementById('video-link').href = detailsData.youtube_link;
+                    document.getElementById('video-thumbnail').src = detailsData.thumbnail_url;
+                }
+
+                // Fetch video summary
+                const summaryResponse = await fetch('/summarize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+                const summaryData = await summaryResponse.json();
+
+                // Hide loading text after fetch completes
+                document.getElementById('loading-text').style.display = 'none';
+
+                if (summaryData.summary) {
+                    document.getElementById('summary-result').textContent = summaryData.summary;
+                } else {
+                    document.getElementById('summary-result').textContent = 'Error: ' + (summaryData.error || 'Unable to summarize video.');
+                }
+            } catch (error) {
+                document.getElementById('summary-result').textContent = 'An error occurred. Please try again later.';
+            }
         }
-
-        // Fetch video summary (similar to your existing function)
-        const summaryResponse = await fetch('/summarize', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url })
-        });
-        const summaryData = await summaryResponse.json();
-
-        if (summaryData.summary) {
-            document.getElementById('summary-result').textContent = summaryData.summary;
-        } else {
-            document.getElementById('summary-result').textContent = 'Error: ' + (summaryData.error || 'Unable to summarize video.');
-        }
-    } catch (error) {
-        document.getElementById('summary-result').textContent = 'An error occurred. Please try again later.';
-    }
-}
     </script>
 </body>
 </html>
