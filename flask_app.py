@@ -2,8 +2,15 @@ from flask import Flask, request, jsonify, render_template
 from youtube_transcript_api import YouTubeTranscriptApi
 import requests
 import os
+from dotenv import load_dotenv
+
+load_dotenv('APIkey.env')
 
 app = Flask(__name__)
+# Print environment variables
+print("Hugging Face API Key:", os.getenv('HUGGING_FACE_API_KEY'))
+print("YouTube API Key:", os.getenv('YOUTUBE_API_KEY'))
+
 
 # Hugging Face API settings
 API_URL = "https://api-inference.huggingface.co/models/facebook/bart-large-cnn"
@@ -18,6 +25,7 @@ def summarize_text(text):
     if response.status_code == 200:
         return response.json()[0]['summary_text']
     else:
+        print("Error:", response.status_code, response.text)
         return None
 
 # Split long text into chunks for summarization
@@ -41,11 +49,18 @@ def summarize_youtube_video():
         return jsonify({"error": "No YouTube URL provided"}), 400
 
     try:
-        video_id = youtube_url.split("v=")[-1]
+        # Extract only the video ID from the URL
+        if "youtu.be" in youtube_url:
+            video_id = youtube_url.split('/')[-1]
+        elif "youtube.com/watch?v=" in youtube_url:
+            video_id = youtube_url.split("v=")[-1].split('&')[0]
+        else:
+            return jsonify({"error": "Invalid YouTube URL format"}), 400
+        
+        # Retrieve the transcript
         transcript = YouTubeTranscriptApi.get_transcript(video_id)
         full_text = " ".join([entry['text'] for entry in transcript])
     except Exception as e:
-        # Catching any exception from YouTubeTranscriptApi (handles all transcript-related errors)
         print(f"Transcript retrieval error: {e}")
         return jsonify({"error": "Transcript not available or restricted due to YouTube's settings."}), 400
 
@@ -57,6 +72,16 @@ def summarize_youtube_video():
         print(f"Summarization error: {e}")
         return jsonify({"error": "Could not summarize transcript"}), 500
 
+def extract_video_id(youtube_url):
+    if "youtu.be" in youtube_url:
+        return youtube_url.split('/')[-1]
+    elif "youtube.com/watch?v=" in youtube_url:
+        return youtube_url.split("v=")[-1].split('&')[0]
+    elif "youtube.com/embed/" in youtube_url:
+        return youtube_url.split('/embed/')[-1].split('?')[0]
+    else:
+        return None
+    
 # Route to test YouTube access
 @app.route('/test_youtube', methods=['GET'])
 def test_youtube():
@@ -78,7 +103,12 @@ def get_video_info():
     if not youtube_url:
         return jsonify({"error": "No YouTube URL provided"}), 400
 
-    video_id = youtube_url.split("v=")[-1]
+    video_id = extract_video_id(youtube_url)
+    print("Extracted Video ID:", video_id)
+
+    if not video_id:
+        return jsonify({"error": "Invalid YouTube URL format"}), 400
+
     url = f"https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id={video_id}&key={YOUTUBE_API_KEY}"
 
     try:
@@ -91,13 +121,19 @@ def get_video_info():
         title = data['items'][0]['snippet']['title']
         author = data['items'][0]['snippet']['channelTitle']
         duration = data['items'][0]['contentDetails']['duration']
+        
+        # Construct the thumbnail URL using the video ID
+        thumbnail_url = f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
 
         return jsonify({
             "title": title,
             "author": author,
-            "duration": duration
+            "duration": duration,
+            "thumbnail_url": thumbnail_url,
+            "youtube_link": f"https://www.youtube.com/watch?v={video_id}"
         })
     except Exception as e:
+        print(f"Failed to retrieve video information: {e}")
         return jsonify({"error": f"Failed to retrieve video information: {e}"}), 500
 
 if __name__ == '__main__':
