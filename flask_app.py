@@ -3,6 +3,8 @@ from youtube_transcript_api import YouTubeTranscriptApi
 import requests
 import os
 from dotenv import load_dotenv
+import time
+from youtube_transcript_api import YouTubeTranscriptApi, TranscriptNotFound
 
 load_dotenv('APIkey.env')
 
@@ -18,6 +20,21 @@ headers = {"Authorization": f"Bearer {os.getenv('HUGGING_FACE_API_KEY')}"}
 
 # YouTube Data API Key from environment variable
 YOUTUBE_API_KEY = os.getenv('YOUTUBE_API_KEY')
+
+def fetch_transcript_with_backoff(video_id, retries=3):
+    delay = 2  # Initial delay in seconds
+    for attempt in range(retries):
+        try:
+            return YouTubeTranscriptApi.get_transcript(video_id)
+        except TranscriptNotFound:
+            print("Transcript not found for this video.")
+            return None
+        except Exception as e:
+            print(f"Attempt {attempt + 1} failed with error: {e}")
+            time.sleep(delay)
+            delay *= 2  # Exponential backoff
+    print("Failed to retrieve transcript after multiple attempts.")
+    return None
 
 # Function to summarize text
 def summarize_text(text):
@@ -39,7 +56,7 @@ def split_text(text, max_words=500, overlap=50):
 def index():
     return render_template('YouTube_Summarizer.html')
 
-# Route to summarize YouTube video transcript
+# Use this function in the summarize_youtube_video route
 @app.route('/summarize', methods=['POST'])
 def summarize_youtube_video():
     data = request.get_json()
@@ -48,22 +65,15 @@ def summarize_youtube_video():
     if not youtube_url:
         return jsonify({"error": "No YouTube URL provided"}), 400
 
-    try:
-        # Extract only the video ID from the URL
-        if "youtu.be" in youtube_url:
-            video_id = youtube_url.split('/')[-1]
-        elif "youtube.com/watch?v=" in youtube_url:
-            video_id = youtube_url.split("v=")[-1].split('&')[0]
-        else:
-            return jsonify({"error": "Invalid YouTube URL format"}), 400
-        
-        # Retrieve the transcript
-        transcript = YouTubeTranscriptApi.get_transcript(video_id)
-        full_text = " ".join([entry['text'] for entry in transcript])
-    except Exception as e:
-        print(f"Transcript retrieval error: {e}")
+    video_id = extract_video_id(youtube_url)
+    transcript = fetch_transcript_with_backoff(video_id)
+    
+    if not transcript:
         return jsonify({"error": "Transcript not available or restricted due to YouTube's settings."}), 400
 
+    full_text = " ".join([entry['text'] for entry in transcript])
+
+    # Proceed with summarizing the transcript
     try:
         chunk_summaries = [summarize_text(chunk) for chunk in split_text(full_text, max_words=500, overlap=50)]
         combined_summary = " ".join(filter(None, chunk_summaries))
