@@ -2,4 +2,7 @@ Flask==2.3.3
 gunicorn==21.2.0
 requests==2.31.0
 youtube-transcript-api==0.6.2
-python-dotenv
+python-dotenv==1.0.0  # Replace with the correct version if needed
+google-auth==2.23.3  # Common version, adjust if necessary
+google-api-python-client==2.94.0  # Common version
+google-cloud-logging==3.6.0  # Common version
