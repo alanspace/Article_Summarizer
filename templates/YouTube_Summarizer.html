@@ -5,166 +5,70 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YouTube Video Summarizer</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
-        }
+        /* CSS Styles */
         body {
             background: #f4f7f6;
-            color: #333;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            font-family: Arial, sans-serif;
         }
         .container {
-            width: 90%;
             max-width: 800px;
             background: white;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
             padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
         .input-group {
             display: flex;
             margin-bottom: 20px;
         }
-        .input-group input[type="text"] {
-            flex: 1;
-            padding: 10px;
-            font-size: 1em;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            margin-right: 10px;
-            width: 80%;
-        }
-        .input-group button {
-            padding: 10px 20px;
-            font-size: 1em;
-            border: none;
-            color: white;
-            background-color: #004d61;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        .input-group button:hover {
-            background-color: #00768b;
-        }
-        .row {
-            display: flex;
-            gap: 20px;
-        }
-        .column {
-            flex: 1;
-            background: #f9f9f9;
-            padding: 15px;
-            border-radius: 4px;
-        }
-        .thumbnail img {
-            width: 100%;
-            border-radius: 8px;
-        }
-        .summary {
+        .content {
+            display: none;
             white-space: pre-wrap;
-            color: #333;
-            margin-top: 10px;
             max-height: 300px;
             overflow-y: auto;
         }
-        .loading {
-            font-size: 1em;
-            color: #888;
+        .content.active {
             display: block;
-            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>YouTube Video Summarizer</h1>
-        <p>Paste a YouTube video link below to get details and a summarized transcript.</p>
-
         <div class="input-group">
-            <input type="text" id="youtube-url" placeholder="Enter YouTube Video URL">
-            <button onclick="getDetailsAndSummary()">Get Details & Summarize</button>
+            <input id="youtube-url" type="text" placeholder="Enter YouTube URL">
+            <button onclick="getDetails()">Get Details</button>
         </div>
-
-        <div class="row">
-            <!-- Left column with video thumbnail and details -->
-            <div class="column">
-                <a id="video-link" href="#" target="_blank">
-                    <img id="video-thumbnail" src="" alt="Video Thumbnail" class="thumbnail">
-                </a>
-                <h3 id="video-title"></h3>
-                <p><strong>Author:</strong> <span id="video-author"></span></p>
-                <p><strong>Duration:</strong> <span id="video-duration"></span></p>
-            </div>
-
-            <!-- Right column for transcript summary -->
-            <div class="column">
-                <h3>Transcript Summary</h3>
-                <span id="loading-text" class="loading" style="display: none;">Loading summary...</span>
-                <div id="summary-result" class="summary"></div>
-            </div>
+        <div id="video-details"></div>
+        <div>
+            <button onclick="getSummary()">Summary</button>
+            <button onclick="getFullTranscript()">Full Transcript</button>
         </div>
+        <div id="loading" class="content"></div>
+        <div id="summary" class="content"></div>
+        <div id="transcript" class="content"></div>
     </div>
 
     <script>
-        async function getDetailsAndSummary() {
+        async function fetchData(endpoint, resultId) {
             const url = document.getElementById('youtube-url').value;
-
-            // Show loading text while fetching
-            document.getElementById('loading-text').style.display = 'block';
-            document.getElementById('summary-result').textContent = '';
-
-            try {
-                // Fetch video details
-                const detailsResponse = await fetch('/video_info', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url })
-                });
-                const detailsData = await detailsResponse.json();
-
-                if (detailsData.error) {
-                    document.getElementById('summary-result').textContent = 'Error: ' + detailsData.error;
-                } else {
-                    // Populate details
-                    document.getElementById('video-title').textContent = detailsData.title;
-                    document.getElementById('video-author').textContent = detailsData.author;
-                    document.getElementById('video-duration').textContent = detailsData.duration;
-                    
-                    // Set the video link and thumbnail
-                    document.getElementById('video-link').href = detailsData.youtube_link;
-                    document.getElementById('video-thumbnail').src = detailsData.thumbnail_url;
-                }
-
-                // Fetch video summary
-                const summaryResponse = await fetch('/summarize', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url })
-                });
-                const summaryData = await summaryResponse.json();
-
-                // Hide loading text after fetch completes
-                document.getElementById('loading-text').style.display = 'none';
-
-                if (summaryData.summary) {
-                    document.getElementById('summary-result').textContent = summaryData.summary;
-                } else {
-                    document.getElementById('summary-result').textContent = 'Error: ' + (summaryData.error || 'Unable to summarize video.');
-                }
-            } catch (error) {
-                document.getElementById('summary-result').textContent = 'An error occurred. Please try again later.';
-            }
+            const resultElement = document.getElementById(resultId);
+            resultElement.textContent = "Loading...";
+            const response = await fetch(endpoint, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ url })
+            });
+            const data = await response.json();
+            resultElement.textContent = data.transcript || data.summary || data.error;
         }
+        function getDetails() { fetchData('/video_info', 'video-details'); }
+        function getSummary() { fetchData('/summarize', 'summary'); }
+        function getFullTranscript() { fetchData('/full_transcript', 'transcript'); }
     </script>
 </body>
 </html>
