@@ -7,6 +7,7 @@ certifi==2024.12.14
 charset-normalizer==3.4.0
 click==8.1.7
 defusedxml==0.7.1
+setuptools>=65.0  # Ensure a recent setuptools version
 Flask==3.1.0
 google-api-core==2.24.0
 google-api-python-client==2.156.0
@@ -33,7 +34,7 @@ python-dateutil==2.8.2
 python-dotenv==1.0.1
 pytz==2022.4
 pytz-deprecation-shim==0.1.0.post0
-pyyaml==5.4.1  # Compatible with Python 3.12
+pyyaml==6.0  # Specify a compatible version
 regex==2022.9.13
 requests==2.32.3
 rsa==4.9
