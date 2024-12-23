@@ -1,0 +1,12 @@
+Source: NewsAPI
+Category: Technology
+Title: Lasers Are Making It Easier to Find Buried Land Mines
+URL: https://www.wired.com/story/this-laser-system-can-locate-landmines-with-high-accuracy/
+Content: Scientists in the US have developed a technology that can detect land mines from far away and with high accuracy.
+--------------------------------------------------------------------------------
+Source: NewsAPI
+Category: Technology
+Title: The Beginning of the End of Big Tech
+URL: https://www.wired.com/story/the-beginning-of-the-end-of-big-tech/
+Content: Next year will be Big Tech's finale, as critiques of Big Tech become common sense and new paradigms emerge.
+--------------------------------------------------------------------------------

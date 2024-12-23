@@ -1,64 +1,46 @@
 import streamlit as st
-import requests
-from bs4 import BeautifulSoup
-import urllib.parse
-import time
+from scraper import fetch_article  # Import the scraper
 from transformers import pipeline
 import torch
+import time
 
-# Initialize the summarizer on MPS (GPU)
 def initialize_summarizer():
-    device = torch.device("mps")  # Use MPS for GPU acceleration
-    summarizer = pipeline("summarization", model="facebook/bart-large-cnn", device=0)  # `device=0` enables MPS
-    return summarizer
+    """Initialize the summarizer pipeline."""
+    if torch.cuda.is_available():
+        device = 0
+    elif torch.backends.mps.is_available():
+        device = 0
+    else:
+        device = -1
+    return pipeline("summarization", model="sshleifer/distilbart-cnn-12-6", device=device)
 
-# Initialize summarizer globally
+def summarize_with_timing(text, summarizer, max_length=250, min_length=100):
+    summaries = []
+    runtime = 0
+    for i in range(0, len(text.split()), 512):
+        chunk = " ".join(text.split()[i:i+512])
+        start_time = time.time()
+        result = summarizer(chunk, max_length=max_length, min_length=min_length, do_sample=False)
+        runtime += time.time() - start_time
+        summaries.append(result[0]["summary_text"])
+    return " ".join(summaries), runtime
+
+# Streamlit App
+st.title("Article Summarizer")
 summarizer = initialize_summarizer()
 
-# Function to measure runtime
-def summarize_with_timing(text):
-    start_time = time.time()
-    result = summarizer(text, max_length=130, min_length=30, do_sample=False)
-    end_time = time.time()
-    runtime = end_time - start_time
-    print(f"Summary runtime on MPS: {runtime:.2f} seconds")
-    return result[0]["summary_text"], runtime
-
-# Streamlit app
-st.title('Article Summarizer')
-
-url = st.text_input('Article URL', placeholder='Paste the URL of the article and press Enter', label_visibility='collapsed')
-
+url = st.text_input("Enter the article URL:")
 if url:
-    try:
-        # Fetch article
-        response = requests.get(url)
-        soup = BeautifulSoup(response.content, 'html.parser')
+    with st.spinner("Fetching and summarizing the article..."):
+        article = fetch_article(url)  # Use the scraper
+        if article and article.get("content"):
+            st.image(article.get("image_url"))
+            st.subheader(article.get("title"))
+            st.write(article.get("content"))
 
-        # Extract main image
-        img_tag = soup.find('img')
-        if img_tag and img_tag.get('src'):
-            img_url = urllib.parse.urljoin(url, img_tag['src'])
-            st.image(img_url)
-
-        # Extract title
-        title = soup.title.string if soup.title else 'No Title Found'
-        st.subheader(title)
-
-        # Extract content
-        paragraphs = soup.find_all('p')
-        full_text = " ".join(p.get_text() for p in paragraphs)
-
-        # Display content
-        tab1, tab2 = st.tabs(["Full Text", "Summary"])
-        with tab1:
-            st.write(full_text or 'No content available.')
-        with tab2:
-            st.subheader('Summary')
-            # Summarize and measure runtime
-            summary, runtime = summarize_with_timing(full_text)
-            st.write(summary or 'No summary available.')
+            summary, runtime = summarize_with_timing(article["content"], summarizer, max_length=300, min_length=150)
+            st.write("### Summary")
+            st.write(summary)
             st.info(f"Summary generated in {runtime:.2f} seconds.")
-
-    except Exception as e:
-        st.error(f'Sorry something went wrong: {e}')
+        else:
+            st.error("Could not fetch or summarize the article.")

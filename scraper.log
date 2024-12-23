@@ -1,0 +1,20 @@
+2024-12-23 17:01:56,029 - INFO - Fetching articles from APIs...
+2024-12-23 17:03:03,047 - ERROR - Error fetching from Currents API: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+2024-12-23 17:04:05,345 - ERROR - Error fetching from Currents API: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+2024-12-23 17:04:14,231 - ERROR - Error fetching article: 403 Client Error: Forbidden. for url: https://www.zonebourse.com/cours/action/TANGIAMO-TOUCH-TECHNOLOGY-61747438/actualite/Tangiamo-Touch-place-sur-la-liste-d-observation-de-NGM-48644142/
+2024-12-23 17:04:14,853 - ERROR - Error fetching article: 400 Client Error: Bad request for url: https://phys.org/news/2024-12-virtual-reality-artificial-intelligence.html
+2024-12-23 17:04:25,349 - ERROR - Error fetching article: HTTPSConnectionPool(host='www.seattletimes.com', port=443): Read timed out. (read timeout=10)
+2024-12-23 17:04:28,922 - ERROR - Error fetching article: 403 Client Error: Forbidden for url: https://seekingalpha.com/article/4745940-ionis-pharmaceuticals-promising-growth-from-tryngolza-approval?source=feed_tag_long_ideas
+2024-12-23 17:04:29,368 - ERROR - Error fetching article: 403 Client Error: Forbidden for url: https://seekingalpha.com/news/4389798-technology-select-sector-spdr-etf-declares-quarterly-distribution-of-03860
+2024-12-23 17:04:39,968 - ERROR - Error fetching article: HTTPSConnectionPool(host='www.washingtonpost.com', port=443): Read timed out. (read timeout=10)
+2024-12-23 17:04:49,907 - ERROR - Error fetching article: 403 Client Error: Forbidden for url: https://www.sports.fr/auto-moto/moto/martin-le-prix-de-la-constance-890371.html
+2024-12-23 17:04:53,595 - ERROR - Error fetching article: 403 Client Error: Forbidden for url: https://seekingalpha.com/article/4746027-anavex-life-sciences-corp-avxl-q4-2024-earnings-call-transcript?source=feed_tag_transcripts
+2024-12-23 17:04:55,164 - ERROR - Error fetching article: 400 Client Error: Bad request for url: https://phys.org/news/2024-12-climate-local-california-threats-abuse.html
+2024-12-23 17:05:06,482 - ERROR - Error fetching article: HTTPSConnectionPool(host='www.washingtonpost.com', port=443): Read timed out. (read timeout=10)
+2024-12-23 17:05:11,658 - ERROR - Error fetching article: 403 Client Error: Forbidden for url: https://www.wsj.com/politics/policy/biden-commutes-sentences-of-37-death-row-inmates-a3d663cf
+2024-12-23 17:05:13,507 - ERROR - Error fetching article: 400 Client Error: Bad request for url: https://medicalxpress.com/news/2024-12-abortion-opponents-shift-focus-pills.html
+2024-12-23 17:05:14,498 - ERROR - Error fetching article: 400 Client Error: Bad request for url: https://medicalxpress.com/news/2024-12-coffee-tea-linked-neck-cancer.html
+2024-12-23 17:05:14,923 - ERROR - Error fetching article: 403 Client Error: Forbidden for url: https://www.kuam.com/story/52050680/local-charter-school-students-rally-behind-fired-teacher
+2024-12-23 17:05:35,527 - INFO - Articles saved to api_articles.txt
+2024-12-23 17:05:35,528 - INFO - Fetching articles from BBC categories...
+2024-12-23 17:05:38,434 - INFO - Articles saved to bbc_articles.txt
